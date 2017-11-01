@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<head>
+	<meta charset="UTF-8">
+	<title>Document</title>
+	<link rel="stylesheet" href="bootstrap.min.css">
+	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+	<style>
+		body{
+			margin: 20px 50px;
+		}
+	</style>
+</head>
+<body>
+	<table class="table table-striped">
+		<thead>
+			<tr>
+				<th>Name</th>
+				<th>Number<a href="#"><span class="caret" id="dwcaret"></span></a></th>
+				<th>Sex</th>
+				<th>Method</th>
+			</tr>
+		</thead>
+		<tbody id="stu_list"></tbody>
+	</table>
+	<div class="form-inline">
+		<div class="form-group input-group">
+			<div class="input-group-addon">Name:</div>
+			<input type="text" id="stu_name" class="form-control" />
+		</div>
+		<!--姓名-->
+		<div class="form-group input-group">
+			<div class="input-group-addon">Number:</div>
+			<input type="number" id="stu_num" class="form-control" />
+		</div>
+		<!--学号-->
+		<div class="form-group">
+			<label>Sex:</label>
+			<input type="radio" name="sex" value="male" />
+			<label>male</label>
+			<input type="radio" name="sex" value="female" />
+			<label>female</label>
+		</div>
+		
+		<button id="addsth" class="btn btn-success"> add </button>
+		<button id="clearstorage" class="btn btn-danger"> clear storage </button>
+	</div>
+
+<script>
+	//获取页面上的组件
+    var addsth = document.getElementById("addsth");
+	var stu_list = document.getElementById("stu_list");
+	var clearstorage = document.getElementById("clearstorage");
+	var dwcaret = document.getElementById("dwcaret");
+	//定义用来存储信息的数组
+	var name_array = new Array();
+	var num_array = new Array();
+	var sex_array = new Array();
+	//在页面显示数组
+	function showrow(name,num,sex){
+				var tr = document.createElement("tr");
+				var td1 = document.createElement("td");
+				var td2 = document.createElement("td");
+				var td3 = document.createElement("td");
+				var td4 = document.createElement("td");
+				var delebtn = document.createElement("a");
+				delebtn.className = "btn btn-warning";
+				delebtn.innerHTML = "delete";
+				delebtn.onclick = function(){
+					var index;
+					var delerow = this.parentNode.parentNode;
+					stu_list.removeChild(delerow);
+					for(i=0;i<name_array.length;i++){
+						if(name_array[i]==this.parentNode.parentNode.firstChild.innerHTML)
+							{index = i;}
+					}
+					name_array.splice(index,1);
+					num_array.splice(index,1);
+					sex_array.splice(index,1);
+					savestu();
+				}
+				td1.innerHTML = name;
+				td2.innerHTML = num;
+				td3.innerHTML = sex;
+				td4.appendChild(delebtn);
+				tr.appendChild(td1);
+				tr.appendChild(td2);
+				tr.appendChild(td3);
+				tr.appendChild(td4);
+				stu_list.appendChild(tr);
+	}
+	//以数组方式保存数据到localstorage
+	function savestu(){
+				localStorage.setItem("name_list",JSON.stringify(name_array));
+				localStorage.setItem("num_list",JSON.stringify(num_array));
+				localStorage.setItem("sex_list",JSON.stringify(sex_array));
+	}
+
+	//刷新页面时加载localstorage内容并在页面显示
+	function showstorage(){
+			if(localStorage.getItem("name_list")){
+			name_array = JSON.parse(localStorage.getItem('name_list'));
+			num_array = JSON.parse(localStorage.getItem('num_list'));
+			sex_array = JSON.parse(localStorage.getItem('sex_list'));
+			for(i=0;i<name_array.length;i++){
+				showrow(name_array[i],num_array[i],sex_array[i]);
+			}
+		}	
+	}
+
+	//按学号排序
+	function paixu(){
+		for(i=0;i<num_array.length;i++){
+			for(j=0;j<num_array.length;j++){
+				if(Number(num_array[j])>Number(num_array[j+1])){
+				num_mid = num_array[j];
+				num_array[j] = num_array[j+1];
+				num_array[j+1] = num_mid;
+
+				name_mid = name_array[j];
+				name_array[j] = name_array[j+1];
+				name_array[j+1] = name_mid;
+
+				sex_mid = sex_array[j];
+				sex_array[j] = sex_array[j+1];
+				sex_array[j+1] = sex_mid;
+
+				}
+			}
+			
+		}
+	}
+	
+	window.onload = function() {
+		showstorage();
+		clearstorage.onclick = function(){
+			localStorage.clear();
+			window.location.reload();
+		}
+		//add按钮绑定添加数据事件
+		addsth.onclick = function(){
+			var stu_name = document.getElementById("stu_name").value;
+			var stu_num = document.getElementById("stu_num").value;
+			var sex = document.getElementsByName("sex");
+			var no_sex = false;
+			var num_error = false;
+			var stu_sex;
+			for(i=0;i<num_array.length;i++){
+				if(stu_num == num_array[i]){
+					num_error = true;
+				}
+			}
+			for(i=0;i<sex.length;i++){
+				if(sex[0].checked){stu_sex = "male";}
+				else if(sex[1].checked){stu_sex = "female";}
+				else if(stu_sex === undefined){no_sex = true;}
+			}
+						
+			if((stu_name=="")||(stu_num=="")||(no_sex)||(num_error)){
+				if((stu_name=="")||(stu_num=="")||(no_sex)){
+					alert("信息尚未填写完整");
+				}
+				if(num_error){
+					alert("该学号已存在");
+				}
+			}
+
+			else{
+				showrow(stu_name,stu_num,stu_sex);
+				name_array.push(stu_name);
+				num_array.push(stu_num);
+				sex_array.push(stu_sex);
+				savestu();
+			}			
+		}
+
+		dwcaret.onclick = function(){
+			paixu();
+			savestu();
+			window.location.reload();
+		}
+	}
+</script>
+</body>
+</html>
